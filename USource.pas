@@ -7,44 +7,34 @@ uses System.SysUtils, System.Types, System.UITypes, System.Classes, System.Varia
 
 type
 
-  TDirection = (dUp, dDown, dLeft, dRight); // Направление: вверх, вниз, налево, направо
-  TRotate = (toLeft, toRight); // Поворот:по часовой или против часовой стрелки
-
-  IMove = interface  // Интерфейс движения
-    procedure Move(Steps: Integer);
+  IMove = interface // Интерфейс движения
+    procedure Move(StepX, StepY: Integer); // На сколько сдвинуть?
   end;
 
-  IRotate = interface  // Интерфейс вращения
-    procedure Rotate(Rotation: TRotate);
+  // Класс адаптер, реализующий методы движения
+  TMoveObject = class(TInterfacedObject, IMove)
+  public
+    PosX, PosY: Integer;
+    procedure Move(StepX, StepY: Integer);
+  end;
+
+  IRotate = interface // Интерфейс вращения
+    procedure Rotate(Rotation: Integer); // На сколько повернуть?
+  end;
+
+  // Класс адаптер, реализующий методы поворота
+  TRotateObject = class(TInterfacedObject, IRotate)
+  public
+    Direction: Integer;
+    procedure Rotate(Rotation: Integer);
   end;
 
   // Космический карабль
-  TSpaceShip = class(TInterfacedObject, IMove, IRotate)
+  TSpaceShip = class
   private
-    PosX, PosY: Integer; // Текущие координаты
-    Direction: TDirection; // Текущее направление: вверх, вниз, налево, направо
-  public
-    Constructor Create;
-    procedure Move(Steps: Integer); // Сдвинуть на указанное число шагов
-    procedure Rotate(Rotation: TRotate); // Повернуть по часовой или против часовой стрелки
-  end;
 
-  TFuel = class
-  private
-    FFuel: Integer; // Уровень топлива
-    FFuelSpeed: Integer; // Расход топлива на шаг
   public
-    Constructor Create;
-    procedure CheckFuelCommand; // Проверяет уровень топлива
-    procedure BurnFuelCommand; // Сжигает топливо
-  end;
-
-  TMacroCommand = class
-  private
-    FCommands: TList<String>;
-  public
-    Constructor Create(Commands: TList<String>);
-    procedure Execute;
+    constructor Create;
   end;
 
 implementation
@@ -53,85 +43,28 @@ implementation
 
 { TSpaceShip }
 
-constructor TSpaceShip.Create;
-begin
-  Direction := dUp; // Изначально движемся вверх
-  PosX := 0; // Начальные координаты
-  PosY := 0; // Начальные координаты
-end;
-
-procedure TSpaceShip.Move(Steps: Integer);
-begin
-  // Смещаемся на заданное число шагов в зависимоси от текущего направления
-  case Direction of
-    dUp:
-      Inc(PosX, Steps);
-    dDown:
-      Dec(PosX, Steps);
-    dLeft:
-      Dec(PosY, Steps);
-    dRight:
-      Inc(PosY, Steps);
-  end;
-end;
-
-procedure TSpaceShip.Rotate(Rotation: TRotate);
-begin
-  // Поворачиваемся налево или направо
-  case Direction of
-    dUp:
-      if Rotation = toRight then
-        Direction := dRight
-      else
-        Direction := dLeft;
-    dDown:
-      if Rotation = toRight then
-        Direction := dLeft
-      else
-        Direction := dRight;
-    dLeft:
-      if Rotation = toRight then
-        Direction := dUp
-      else
-        Direction := dDown;
-    dRight:
-      if Rotation = toRight then
-        Direction := dDown
-      else
-        Direction := dUp;
-  end;
-end;
-
 { TFuel }
 
-constructor TFuel.Create;
+{ TMoveObject }
+
+procedure TMoveObject.Move(StepX, StepY: Integer);
 begin
-  FFuel := 100; // Начальный запас топлива
+  PosX := PosX + StepX;
+  PosY := PosY + StepY;
 end;
 
-procedure TFuel.BurnFuelCommand;
+{ TRotateObject }
+
+procedure TRotateObject.Rotate(Rotation: Integer);
 begin
-  Dec(FFuel, FFuelSpeed);
+  Direction := Direction + Rotation;
 end;
 
-procedure TFuel.CheckFuelCommand;
-// Проверяет уровень топлива
-begin
-  if FFuel <= 0 then
-    Raise Exception.Create('CommandException')
-end;
+{ TSpaceShip }
 
-{ TMacroCommand }
-
-constructor TMacroCommand.Create(Commands: TList<String>);
+constructor TSpaceShip.Create;
 begin
-  FCommands := Commands;
-end;
 
-procedure TMacroCommand.Execute;
-begin
-  for var Command in FCommands do
-    if True then
 end;
 
 end.
